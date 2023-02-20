@@ -83,7 +83,7 @@ Output: modified CSV-file (2 service lines, no indexes)
 6. After completion of work press "Сохранить в новый CSV-файл" button to save changes
 
 <div align="center">
-    <img src="interface.png" alt="interface" width='40%'>
+    <img src="interface.png" alt="interface" width='80%'>
 </div>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

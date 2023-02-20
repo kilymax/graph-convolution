@@ -169,7 +169,7 @@ class Main(Tk):
                                 resolution=1, command=lambda event: self.create_plots(self.scale1.get(), self.scale2.get()))
             self.scale2.config(from_=self.bottomborder, to=self.upperborder, 
                                 resolution=1, command=lambda event: self.create_plots(self.scale1.get(), self.scale2.get()))
-            self.scale3.config(from_=1, to=100, 
+            self.scale3.config(from_=1, to=200, 
                                 resolution=1, command=lambda event: self.smoothing(self.scale3.get(), self.scale1.get(), self.scale2.get()))
             self.scale1.set(self.bottomborder)
             self.scale2.set(self.upperborder)
@@ -231,7 +231,7 @@ class Main(Tk):
     # Функция свертки (сглаживания)
     def smoothing(self, w, sc1, sc2):
         self.create_plots(sc1, sc2)
-        self.w = np.kaiser(w*5, 30)
+        self.w = np.kaiser(w*2, 30)
         self.smoothset = []
         for i in range(len(self.listbox.curselection())):
             k = self.listbox.curselection()[i]
