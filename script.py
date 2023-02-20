@@ -18,6 +18,8 @@ class Main(Tk):
         self.font1 = 'Verdana 12'
         self.font2 = 'Verdana 8'
 
+        self.original_file_path = ''
+
         buttonstyle = ttk.Style()
         buttonstyle.configure("TButton", background="grey", foreground="black", 
                                 font=self.font1, justify="center")
@@ -28,13 +30,10 @@ class Main(Tk):
         dynamiclabelstyle.configure("dynamic.TLabel", foreground="black", 
                                     background="#bababa", font=self.font1,
                                     padding=[10, 0], anchor=TOP)
-
-        self.original_file_path = ''
-        # self.bind("<MouseWheel>", self.mouse_wheel)
-
+        
         # Левая и правая части интерфейса
         self.leftframe = Frame(self, bg='#bababa')
-        self.leftframe.grid(row=0, column=0, sticky="nsew", padx=3, pady=3)
+        self.leftframe.grid(row=0, column=0, sticky="nsew")
         self.rightframe = Frame(self, bg='white')
         self.rightframe.grid(row=0, column=1, sticky="nsew")
         self.grid_rowconfigure(0, weight=1)
@@ -64,6 +63,8 @@ class Main(Tk):
         self.canvas = FigureCanvasTkAgg(self.figure, self.rightframe)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
         self.ax = self.figure.add_axes(111)
+        for label in (self.ax.get_xticklabels() + self.ax.get_yticklabels()):
+                    label.set_fontsize(8)
 
         matplotlib.rcParams['font.family'] = 'verdana'
         margins = {
@@ -75,7 +76,7 @@ class Main(Tk):
         self.figure.subplots_adjust(**margins) 
         
         self.bottomframe = Frame(self.rightframe, bg='#bababa')
-        self.bottomframe.grid(row=2, column=0, sticky="nsew", padx=3, pady=3)
+        self.bottomframe.grid(row=2, column=0, sticky="nsew")
 
         # создание бегунков для регулировки масштаба графика
         self.scalelabel = Label(self.bottomframe, fg='black', width=8, height=6,
@@ -162,21 +163,21 @@ class Main(Tk):
             self.cols = self.df.columns
             self.bottomborder = self.df[self.cols[1]][1:].index[0]
             self.upperborder = self.df[self.cols[1]][1:].index[-1]
-            # print('Нижняя и верхняя временные границы:', self.bottomborder, self.upperborder)
             
             # Добавление конфига для бегунков и кнопки "построить график"
             self.scale1.config(from_=self.bottomborder, to=self.upperborder, 
                                 resolution=1, command=lambda event: self.create_plots(self.scale1.get(), self.scale2.get()))
             self.scale2.config(from_=self.bottomborder, to=self.upperborder, 
                                 resolution=1, command=lambda event: self.create_plots(self.scale1.get(), self.scale2.get()))
-            self.scale3.config(from_=1, to=200, 
-                                resolution=1, command=lambda event: self.smoothing(self.scale3.get(), self.scale1.get(), self.scale2.get()))
+            self.scale3.config(from_=1, to=100, 
+                                resolution=1, command=lambda event: self.convolving(self.scale3.get(), self.scale1.get(), self.scale2.get()))
             self.scale1.set(self.bottomborder)
             self.scale2.set(self.upperborder)
             self.scale3.set(1)
 
             self.button2.config(command=lambda: self.create_plots(self.scale1.get(), self.scale2.get()))
             self.button3.config(command=lambda: self.fix_smooth_result(self.scale1.get(), self.scale2.get()))
+            self.button4.config(command=self.save_in_file)
 
             # Вывод информации о данных
             self.label1.config(text=f'Параметры: {len(self.cols)-1}\nЗначения: {self.upperborder}')
@@ -187,83 +188,91 @@ class Main(Tk):
                     self.listbox.insert(END, param)
 
         except FileNotFoundError:
+            self.ax.clear()
             self.notificationlabel.config(text='Файл не выбран', style="dynamic.TLabel", foreground='red')
 
     # создание графиков
     def create_plots(self, sc1, sc2):
         if self.original_file_path != '':
             if self.listbox.curselection() != ():
-                self.maxY = 1
-                self.paramindexlist = self.listbox.curselection()
-                self.ax.clear()
+                if sc1 < sc2:
+                    self.maxY = 1
+                    self.paramindexlist = self.listbox.curselection()
+                    self.ax.clear()
 
-                # Настройка внешнего вида графика
-                self.ax.set_xlabel(f'Временная ось ({sc2-sc1+1} сек)')
-                if len(self.paramindexlist) == 1:
-                    self.ax.set_ylabel(f'{self.df[self.cols[self.paramindexlist[0]+1]][0]}')
+                    # Настройка внешнего вида графика
+                    
+
+                    # Прорисовка графика на основе исходных данных
+                    for i in self.paramindexlist:
+                        self.data = self.df[self.cols[i+1]][1:][sc1-1:sc2]
+                        self.x = np.array(self.data.index)
+                        self.y = np.array(self.data.values, float)
+                        self.ax.plot(self.x, self.y, label=f'{self.cols[i+1][1:]} ({self.df[self.cols[i+1]][0]})')
+                        if self.maxY < abs(max(self.y)):
+                            self.maxY = abs(max(self.y))
+                    # Настройка внешнего вида графика
+                    self.ax.set_xlabel(f'Временная ось ({sc2-sc1+1} сек)')
+                    if len(self.paramindexlist) == 1:
+                        self.ax.set_ylabel(f'{self.df[self.cols[self.paramindexlist[0]+1]][0]}')
+                    else:
+                        self.ax.set_ylabel('Единицы измерения')
+                    self.ax.legend(ncol=1, fontsize='8', loc='best') # bbox_to_anchor=(1, 1.15),
+                    self.ax.grid(visible=True, which='major', color = 'gray')
+                    self.ax.grid(visible=True, which='minor', color = 'gray', linestyle = ':')
+                    self.ax.xaxis.set_major_locator(ticker.MultipleLocator(400))
+                    self.ax.xaxis.set_minor_locator(ticker.MultipleLocator(100))
+                    self.ax.yaxis.set_major_locator(ticker.MultipleLocator(self.maxY/12))
+                    self.ax.yaxis.set_minor_locator(ticker.MultipleLocator(self.maxY/3))
+                    for label in (self.ax.get_xticklabels() + self.ax.get_yticklabels()):
+                        label.set_fontsize(8)
+                    self.canvas.draw()
+                    self.notificationlabel.config(text='', style="dynamic.TLabel", foreground='red')
                 else:
-                    self.ax.set_ylabel('Единицы измерения')
-
-                # Прорисовка графика на основе исходных данных
-                for i in self.paramindexlist:
-                    self.data = self.df[self.cols[i+1]][1:][sc1-1:sc2]
-                    self.x = np.array(self.data.index)
-                    self.y = np.array(self.data.values, float)
-                    self.ax.plot(self.x, self.y, label=f'{self.cols[i+1][1:]} ({self.df[self.cols[i+1]][0]})')
-                    if self.maxY < abs(max(self.y)):
-                        self.maxY = abs(max(self.y))
-                # Настройка внешнего вида графика
-                
-                self.ax.legend(ncol=1, fontsize='8', loc='best') # bbox_to_anchor=(1, 1.15),
-                self.ax.grid(visible=True, which='major', color = 'gray')
-                self.ax.grid(visible=True, which='minor', color = 'gray', linestyle = ':')
-                self.ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                self.ax.xaxis.set_minor_locator(ticker.MultipleLocator(100))
-                self.ax.yaxis.set_major_locator(ticker.MultipleLocator(self.maxY/12))
-                self.ax.yaxis.set_minor_locator(ticker.MultipleLocator(self.maxY/3))
-                self.canvas.draw()
-                self.notificationlabel.config(text='', style="dynamic.TLabel", foreground='red')
+                    self.notificationlabel.config(text='Верхняя граница не может\nменьше, чем нижняя', style="dynamic.TLabel", foreground='red')
             else:
                 self.notificationlabel.config(text='Параметры не выбраны', style="dynamic.TLabel", foreground='red')
         else:
             self.notificationlabel.config(text='Файл не выбран', style="dynamic.TLabel", foreground='red')
     
     # Функция свертки (сглаживания)
-    def smoothing(self, w, sc1, sc2):
-        self.create_plots(sc1, sc2)
-        self.w = np.kaiser(w*2, 30)
-        self.smoothset = []
-        for i in range(len(self.listbox.curselection())):
-            k = self.listbox.curselection()[i]
-            self.smoothset.append([])
-            self.smoothset[i] = np.array(self.df[self.cols[k+1]][1:][sc1-1:sc2].values, float)
-            # добавление отступов в датасет для равномерного сглаживания крайних значений
-            try:
-                self.bottompaddingset = np.full(w, np.array(self.df[self.cols[k+1]][1:].values[sc1-1-1], float))
-                self.upperpaddingset = np.full(w, np.array(self.df[self.cols[k+1]][1:].values[sc2], float))
-            except:
-                self.bottompaddingset = np.full(w,  self.smoothset[i][0])
-                self.upperpaddingset = np.full(w,  self.smoothset[i][-1])
-            self.smoothset[i] = np.insert (self.smoothset[i], 0, self.bottompaddingset)
-            self.smoothset[i] = np.append(self.smoothset[i], self.upperpaddingset)
-            # свертка
-            self.smoothset[i] = np.convolve(self.w/self.w.sum(), self.smoothset[i], mode='same')
-            # возврат к исходному датасету
-            self.smoothset[i] = np.around(self.smoothset[i][len(self.bottompaddingset):-len(self.upperpaddingset)], decimals=4)
-            # построение графиков по результатам свертки
-            self.ax.plot(self.x, self.smoothset[i], label=f'Convolved {self.cols[k+1][1:]} ({self.df[self.cols[k+1]][0]})')
-            self.ax.legend(ncol=1, fontsize='8', loc='best')
-            self.canvas.draw()
+    def convolving(self, w, sc1, sc2):
+        if sc1 < sc2:
+            self.create_plots(sc1, sc2)
+            self.w = np.kaiser(w*5, 30)
+            self.smoothset = []
+            for i in range(len(self.listbox.curselection())):
+                k = self.listbox.curselection()[i]
+                self.smoothset.append([])
+                self.smoothset[i] = np.array(self.df[self.cols[k+1]][1:][sc1-1:sc2].values, float)
+                # добавление отступов в датасет для равномерного сглаживания крайних значений
+                try:
+                    self.bottompaddingset = np.full(w*3, np.array(self.df[self.cols[k+1]][1:].values[sc1-1-1], float))
+                    self.upperpaddingset = np.full(w*3, np.array(self.df[self.cols[k+1]][1:].values[sc2], float))
+                except:
+                    self.bottompaddingset = np.full(w*3,  self.smoothset[i][0])
+                    self.upperpaddingset = np.full(w*3,  self.smoothset[i][-1])
+                self.smoothset[i] = np.insert (self.smoothset[i], 0, self.bottompaddingset)
+                self.smoothset[i] = np.append(self.smoothset[i], self.upperpaddingset)
+                # свертка
+                self.smoothset[i] = np.convolve(self.w/self.w.sum(), self.smoothset[i], mode='same')
+                # возврат к исходному датасету
+                self.smoothset[i] = np.around(self.smoothset[i][len(self.bottompaddingset):-len(self.upperpaddingset)], decimals=4)
+                # построение графиков по результатам свертки
+                self.ax.plot(self.x, self.smoothset[i], label=f'Convolved {self.cols[k+1][1:]} ({self.df[self.cols[k+1]][0]})')
+                self.ax.legend(ncol=1, fontsize='8', loc='best')
+                self.canvas.draw()
+                self.notificationlabel.config(text='', style="dynamic.TLabel", foreground='red')
+        else:
+            self.ax.clear()
+            self.notificationlabel.config(text='Верхняя граница не может\nменьше, чем нижняя', style="dynamic.TLabel", foreground='red')
         
     # сохранение изменений в исходном dataframe
     def fix_smooth_result(self, sc1, sc2):
         for i in range(len(self.listbox.curselection())):
             k = self.listbox.curselection()[i]
             for j in range(len(self.df[self.cols[k+1]][1:][sc1-1:sc2].values)):
-                # print(f'{self.df[self.cols[k+1]][1:][sc1-1:sc2].index[j]}: {self.df[self.cols[k+1]][1:][sc1-1:sc2].values[j]} -> {self.convolved[i][j]}')
                 self.df[self.cols[k+1]][1:][sc1-1:sc2].values[j] = str(self.smoothset[i][j])
-        # print(f'{self.df[self.cols[5+1]][1:][sc1-1:sc2].index[0]}: {self.df[self.cols[5+1]][1:][sc1-1:sc2].values[0]} -> {self.convolved[1][0]}')
-        # print(self.convolved[1])
         self.button4.config(command=self.save_in_file)
         self.create_plots(sc1, sc2)
 
