@@ -279,7 +279,7 @@ class Main(Tk):
 if __name__ == "__main__":
     main = Main()
     main.geometry(f'{1200}x{600}')
-    main.title('Convolution CSV')
+    main.title('CSV Convolution')
     main['bg'] = 'white'
 
 
