@@ -156,7 +156,7 @@ class Main(Tk):
             self.original_file_path = fd.askopenfilename()
             # self.original_file_path = 'c:/.My/Freelance/CSVSmoother/test.csv'
             # shutil.copyfile(self.original_file_path, self.modified_file_path, follow_symlinks=True)
-
+            
             # Чтение данных и сохранение в dataframe
             self.df = pd.read_csv(self.original_file_path, delimiter='\t', encoding='utf-16')
             self.notificationlabel.config(text='Файл успешно загружен', style="dynamic.TLabel", foreground='green')
@@ -186,9 +186,9 @@ class Main(Tk):
             for param in self.cols:
                 if param != 'DateTime':
                     self.listbox.insert(END, param)
+            
 
         except FileNotFoundError:
-            self.ax.clear()
             self.notificationlabel.config(text='Файл не выбран', style="dynamic.TLabel", foreground='red')
 
     # создание графиков
@@ -238,24 +238,31 @@ class Main(Tk):
     # Функция свертки (сглаживания)
     def convolving(self, w, sc1, sc2):
         if sc1 < sc2:
+            self.ax.clear()
             self.create_plots(sc1, sc2)
-            self.w = np.kaiser(w*5, 30)
+            self.w1 = np.kaiser(w*5, 30)
+            self.w2 = np.kaiser(w*3, 30)
             self.smoothset = []
             for i in range(len(self.listbox.curselection())):
                 k = self.listbox.curselection()[i]
                 self.smoothset.append([])
                 self.smoothset[i] = np.array(self.df[self.cols[k+1]][1:][sc1-1:sc2].values, float)
                 # добавление отступов в датасет для равномерного сглаживания крайних значений
+                if w < 5:
+                    w = 50
+                else:
+                    w *= 5
                 try:
-                    self.bottompaddingset = np.full(w*3, np.array(self.df[self.cols[k+1]][1:].values[sc1-1-1], float))
-                    self.upperpaddingset = np.full(w*3, np.array(self.df[self.cols[k+1]][1:].values[sc2], float))
+                    self.bottompaddingset = np.full(w, np.array(self.df[self.cols[k+1]][1:].values[sc1-1-1], float))
+                    self.upperpaddingset = np.full(w, np.array(self.df[self.cols[k+1]][1:].values[sc2], float))
                 except:
-                    self.bottompaddingset = np.full(w*3,  self.smoothset[i][0])
-                    self.upperpaddingset = np.full(w*3,  self.smoothset[i][-1])
+                    self.bottompaddingset = np.full(w,  self.smoothset[i][0])
+                    self.upperpaddingset = np.full(w,  self.smoothset[i][-1])
                 self.smoothset[i] = np.insert (self.smoothset[i], 0, self.bottompaddingset)
                 self.smoothset[i] = np.append(self.smoothset[i], self.upperpaddingset)
                 # свертка
-                self.smoothset[i] = np.convolve(self.w/self.w.sum(), self.smoothset[i], mode='same')
+                self.smoothset[i][10:-10] = np.convolve(self.w1/self.w1.sum(), self.smoothset[i][10:-10], mode='same')
+                #self.smoothset[i] = np.convolve(self.w2/self.w2.sum(), self.smoothset[i], mode='same')
                 # возврат к исходному датасету
                 self.smoothset[i] = np.around(self.smoothset[i][len(self.bottompaddingset):-len(self.upperpaddingset)], decimals=4)
                 # построение графиков по результатам свертки
@@ -264,7 +271,6 @@ class Main(Tk):
                 self.canvas.draw()
                 self.notificationlabel.config(text='', style="dynamic.TLabel", foreground='red')
         else:
-            self.ax.clear()
             self.notificationlabel.config(text='Верхняя граница не может\nменьше, чем нижняя', style="dynamic.TLabel", foreground='red')
         
     # сохранение изменений в исходном dataframe
