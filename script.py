@@ -40,7 +40,7 @@ class Main(Tk):
         self.grid_columnconfigure(1, weight=10)
 
         # Наполнение левой части
-        self.button1 = ttk.Button(self.leftframe, text='Выбрать CSV-файл', command=self.open_file)
+        self.button1 = ttk.Button(self.leftframe, text='Выбрать файл (csv/txt)', command=self.open_file)
         self.button1.grid(row=0, column=0, pady=10, padx=10, sticky="nsew")
 
         self.label1 = ttk.Label(self.leftframe, style="default.TLabel", text='\n')
@@ -124,7 +124,7 @@ class Main(Tk):
         self.bottomframe.grid_columnconfigure(2, weight=2)
         
         # кнопка сохранения в файл
-        self.button4 = ttk.Button(self.bottomframe, text='Сохранить в\nновый CSV-файл', 
+        self.button4 = ttk.Button(self.bottomframe, text='Сохранить в\nновый файл', 
                                 width=20, command=lambda: self.notificationlabel.config(text='Файл не выбран', 
                                         style="dynamic.TLabel", foreground='red'))
         self.button4.grid(row=3, column=3, pady=5, padx=40, sticky="e")
@@ -294,8 +294,10 @@ class Main(Tk):
 if __name__ == "__main__":
     main = Main()
     main.geometry(f'{1200}x{600}')
-    main.title('CSV Convolution')
+    main.title('Convolution')
     main['bg'] = 'white'
 
 
     main.mainloop()
+
+    # pyinstaller -F -w -i 'ico.png' script.py

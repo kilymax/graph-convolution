@@ -1,11 +1,11 @@
-# CSV Convolution
+# Graph Convolution
 
 <a name="readme-top"></a>
 
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/lostie21yo/CSV-convolution">
+  <a href="https://github.com/lostie21yo/graph-convolution">
     <img src="ico.png" alt="" width="80" height="80">
   </a>
 </div>
@@ -36,11 +36,11 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-CSV Convolution is a desktop program which designed to convolve determined data from CSV. 
+Graph Convolution is a desktop program which designed to convolve determined data from CSV, TXT. 
 
-Input:  CSV-file (2 service lines, no indexes)
+Input:  CSV/TXT-file (2 service lines, no indexes)
 
-Output: modified CSV-file (2 service lines, no indexes)
+Output: modified CSV/TXT-file (2 service lines, no indexes)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -65,7 +65,7 @@ Output: modified CSV-file (2 service lines, no indexes)
 
 1. Clone the repo
    ```sh
-   git clone https://github.com/lostie21yo/CSV-convolution
+   git clone https://github.com/lostie21yo/graph-convolution
    ```
 2. Use executable file .exe or run .py file
 
@@ -75,12 +75,12 @@ Output: modified CSV-file (2 service lines, no indexes)
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-1. Select attached CSV-file (2 service lines, no indexes)
+1. Select attached CSV/TXT file (2 service lines, no indexes)
 2. Select one or more parametres
-3. Set the range of date
+3. Set the range of data
 4. Set the convolution coefficient
 5. Press "Сгладить выбранный диапазон" button
-6. After completion of work press "Сохранить в новый CSV-файл" button to save changes
+6. After completion of work press "Сохранить в новый файл" button to save changes
 
 <div align="center">
     <img src="interface.png" alt="interface" width='80%'>
@@ -94,7 +94,7 @@ Output: modified CSV-file (2 service lines, no indexes)
 
 Your Name - [Telegram](https://t.me/leoncox) - leon.coxsw@gmail.com
 
-Project Link: [Manga-Slicer](https://github.com/lostie21yo/CSV-convolution)
+Project Link: [Manga-Slicer](https://github.com/lostie21yo/graph-convolution)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
